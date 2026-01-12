@@ -357,7 +357,13 @@ async function extractContent() {
     const platform = platformResponse.platform;
 
     // Execute the appropriate content script
-    const scriptFile = `content-scripts/${platform === 'x' ? 'twitter' : platform}_extractor.js`;
+    // Map platform names to script file names
+    const platformToScript = {
+      'x': 'twitter',
+      'generic_web': 'generic'
+    };
+    const scriptName = platformToScript[platform] || platform;
+    const scriptFile = `content-scripts/${scriptName}_extractor.js`;
 
     const results = await chrome.scripting.executeScript({
       target: { tabId: tab.id },

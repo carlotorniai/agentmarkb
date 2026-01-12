@@ -430,7 +430,13 @@ function detectPlatform(url) {
  * Execute content script and get extracted data
  */
 async function extractContent(tabId, platform) {
-  const scriptFile = `content-scripts/${platform === 'x' ? 'twitter' : platform}_extractor.js`;
+  // Map platform names to script file names
+  const platformToScript = {
+    'x': 'twitter',
+    'generic_web': 'generic'
+  };
+  const scriptName = platformToScript[platform] || platform;
+  const scriptFile = `content-scripts/${scriptName}_extractor.js`;
 
   try {
     const results = await chrome.scripting.executeScript({
