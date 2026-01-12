@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=400, height=500">
+  <title>KB Manager</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-title">
+        <span class="logo">KB</span>
+        <span class="title">Knowledge Base Manager</span>
+      </div>
+      <button class="settings-btn" id="settingsBtn" title="Settings">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        </svg>
+      </button>
+    </header>
+
+    <!-- Loading State -->
+    <div id="loadingState" class="state loading-state">
+      <div class="spinner"></div>
+      <p>Extracting content...</p>
+    </div>
+
+    <!-- Error State -->
+    <div id="errorState" class="state error-state hidden">
+      <div class="error-icon">!</div>
+      <p id="errorMessage">An error occurred</p>
+      <button class="btn btn-secondary" id="retryBtn">Retry</button>
+    </div>
+
+    <!-- No Config State -->
+    <div id="noConfigState" class="state no-config-state hidden">
+      <div class="info-icon">i</div>
+      <p>Please configure the KB file path in settings first.</p>
+      <button class="btn btn-primary" id="goToSettingsBtn">Open Settings</button>
+    </div>
+
+    <!-- Success State -->
+    <div id="successState" class="state success-state hidden">
+      <div class="success-icon">&#10003;</div>
+      <p id="successMessage">Saved successfully!</p>
+    </div>
+
+    <!-- Main Content -->
+    <main id="mainContent" class="main-content hidden">
+      <!-- Platform Badge -->
+      <div class="platform-badge" id="platformBadge">
+        <span class="platform-icon" id="platformIcon"></span>
+        <span class="platform-name" id="platformName">Loading...</span>
+      </div>
+
+      <!-- Author Section -->
+      <section class="section author-section">
+        <h3 class="section-title">Author</h3>
+        <div class="author-info">
+          <div class="author-name" id="authorName">-</div>
+          <div class="author-status" id="authorStatus"></div>
+        </div>
+      </section>
+
+      <!-- Content Preview Section -->
+      <section class="section content-section">
+        <h3 class="section-title">Content Preview</h3>
+        <div class="content-preview" id="contentPreview">
+          <div class="content-title" id="contentTitle">-</div>
+          <div class="content-text" id="contentText">-</div>
+        </div>
+      </section>
+
+      <!-- Topics Section -->
+      <section class="section topics-section">
+        <h3 class="section-title">Topics</h3>
+        <div class="topics-container" id="topicsContainer">
+          <!-- Topic checkboxes will be inserted here -->
+        </div>
+        <div class="add-topic-container">
+          <input type="text" id="customTopicInput" class="custom-topic-input" placeholder="Add custom topic...">
+          <button class="btn btn-small" id="addTopicBtn">Add</button>
+        </div>
+      </section>
+
+      <!-- Optional Summary Section -->
+      <section class="section summary-section">
+        <h3 class="section-title">Summary (Optional)</h3>
+        <textarea id="summaryInput" class="summary-input" placeholder="Add a brief summary..."></textarea>
+      </section>
+
+      <!-- Actions -->
+      <div class="actions">
+        <button class="btn btn-secondary" id="cancelBtn">Cancel</button>
+        <button class="btn btn-primary" id="saveBtn">Save to KB</button>
+      </div>
+    </main>
+
+    <!-- Duplicate State -->
+    <div id="duplicateState" class="state duplicate-state hidden">
+      <div class="duplicate-icon">&#8634;</div>
+      <p>This content is already saved in your Knowledge Base.</p>
+      <button class="btn btn-secondary" id="closeDuplicateBtn">Close</button>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KB Manager Settings</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div class="header-content">
+        <span class="logo">KB</span>
+        <h1>Knowledge Base Manager Settings</h1>
+      </div>
+    </header>
+
+    <main class="main">
+      <!-- Configuration Section -->
+      <section class="section">
+        <h2 class="section-title">Configuration</h2>
+
+        <div class="form-group">
+          <label for="kbFilePath" class="label">Knowledge Base File Path</label>
+          <p class="help-text">
+            Enter the absolute path to your YAML knowledge base file.
+            Example: /Users/username/Documents/kb/curated_sources.yaml
+          </p>
+          <div class="input-group">
+            <input
+              type="text"
+              id="kbFilePath"
+              class="input"
+              placeholder="/path/to/your/knowledge-base.yaml"
+            >
+          </div>
+        </div>
+
+        <div class="button-group">
+          <button class="btn btn-secondary" id="testBtn">Test Connection</button>
+          <button class="btn btn-primary" id="saveBtn">Save Settings</button>
+        </div>
+
+        <!-- Connection Status -->
+        <div class="status-container hidden" id="statusContainer">
+          <div class="status" id="status"></div>
+        </div>
+      </section>
+
+      <!-- Native Host Installation -->
+      <section class="section">
+        <h2 class="section-title">Native Host Setup</h2>
+        <p class="description">
+          The native messaging host is required to read and write your local YAML file.
+          Follow these steps to install it:
+        </p>
+
+        <div class="steps">
+          <div class="step">
+            <div class="step-number">1</div>
+            <div class="step-content">
+              <h3>Open Terminal</h3>
+              <p>Open the Terminal application on your Mac.</p>
+            </div>
+          </div>
+
+          <div class="step">
+            <div class="step-number">2</div>
+            <div class="step-content">
+              <h3>Navigate to extension folder</h3>
+              <p>Navigate to the native-host folder within the extension directory:</p>
+              <code class="code-block">cd /path/to/extension/native-host</code>
+            </div>
+          </div>
+
+          <div class="step">
+            <div class="step-number">3</div>
+            <div class="step-content">
+              <h3>Run install script</h3>
+              <p>Execute the installation script:</p>
+              <code class="code-block">./install.sh</code>
+            </div>
+          </div>
+
+          <div class="step">
+            <div class="step-number">4</div>
+            <div class="step-content">
+              <h3>Enter extension ID</h3>
+              <p>When prompted, enter your Chrome extension ID. You can find it on the
+                 <strong>chrome://extensions/</strong> page after loading the extension.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="extension-id-info">
+          <h3>Your Extension ID</h3>
+          <p class="extension-id" id="extensionId">Loading...</p>
+          <button class="btn btn-small" id="copyIdBtn">Copy ID</button>
+        </div>
+      </section>
+
+      <!-- Recent Additions -->
+      <section class="section">
+        <h2 class="section-title">Recent Additions</h2>
+        <div class="recent-list" id="recentList">
+          <p class="empty-message">No recent additions</p>
+        </div>
+      </section>
+
+      <!-- About -->
+      <section class="section">
+        <h2 class="section-title">About</h2>
+        <p class="description">
+          KB Manager helps you save interesting articles, tweets, and posts to your local
+          knowledge base. Content is stored in a YAML file that you can version control,
+          search, and use however you like.
+        </p>
+        <p class="version">Version 1.0.0</p>
+      </section>
+    </main>
+  </div>
+
+  <script src="options.js"></script>
+</body>
+</html>

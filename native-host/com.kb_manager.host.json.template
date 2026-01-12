@@ -1,0 +1,9 @@
+{
+  "name": "com.kb_manager.host",
+  "description": "KB Manager Native Host for reading/writing YAML knowledge base",
+  "path": "{{HOST_PATH}}",
+  "type": "stdio",
+  "allowed_origins": [
+    "chrome-extension://{{EXTENSION_ID}}/"
+  ]
+}
