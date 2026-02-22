@@ -361,16 +361,20 @@
     extracted.platform = 'linkedin';
     extracted.pageUrl = window.location.href;
 
-    // Extract full content via Readability if available (works well for Pulse articles)
+    // Extract full content via Readability and convert to Markdown (works well for Pulse articles)
     if (typeof Readability !== 'undefined') {
       try {
         const clone = document.cloneNode(true);
         const article = new Readability(clone).parse();
         if (article && article.content) {
-          extracted.fullContentHtml = article.content;
           if (!extracted.content?.title && article.title) {
             extracted.content = extracted.content || {};
             extracted.content.title = article.title;
+          }
+          if (typeof TurndownService !== 'undefined') {
+            const td = new TurndownService({ headingStyle: 'atx', codeBlockStyle: 'fenced', bulletListMarker: '-' });
+            if (typeof turndownPluginGfm !== 'undefined') { td.use(turndownPluginGfm.gfm); }
+            extracted.fullContentMarkdown = td.turndown(article.content);
           }
         }
       } catch (e) {

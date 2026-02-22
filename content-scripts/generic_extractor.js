@@ -439,19 +439,24 @@
       result.author.source
     );
 
-    // Extract full content via Readability if available
+    // Extract full content via Readability and convert to Markdown
     if (typeof Readability !== 'undefined') {
       try {
         const clone = document.cloneNode(true);
         const article = new Readability(clone).parse();
         if (article && article.content) {
-          result.fullContentHtml = article.content;
           // Use Readability's title/excerpt as fallback
           if (!result.content.title && article.title) {
             result.content.title = article.title;
           }
           if (!result.content.summary && article.excerpt) {
             result.content.summary = article.excerpt;
+          }
+          // Convert HTML to Markdown if Turndown is available
+          if (typeof TurndownService !== 'undefined') {
+            const td = new TurndownService({ headingStyle: 'atx', codeBlockStyle: 'fenced', bulletListMarker: '-' });
+            if (typeof turndownPluginGfm !== 'undefined') { td.use(turndownPluginGfm.gfm); }
+            result.fullContentMarkdown = td.turndown(article.content);
           }
         }
       } catch (e) {

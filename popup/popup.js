@@ -188,8 +188,8 @@ function displayExtractedData() {
   elements.contentText.textContent = text.substring(0, 200) + (text.length > 200 ? '...' : '') || 'No preview available';
 
   // Show content extraction status
-  if (extractedData.fullContentHtml) {
-    const charCount = extractedData.fullContentHtml.length;
+  if (extractedData.fullContentMarkdown) {
+    const charCount = extractedData.fullContentMarkdown.length;
     const displayCount = charCount > 1000 ? `${Math.round(charCount / 1000)}K` : charCount;
     elements.contentStatus.textContent = `Full content extracted (${displayCount} chars)`;
     elements.contentStatus.className = 'content-status full-content';
@@ -317,7 +317,7 @@ async function saveToKB() {
       authorData: authorData,
       contentData: contentData,
       topics: Array.from(selectedTopics),
-      fullContentHtml: extractedData.fullContentHtml || null
+      fullContentMarkdown: extractedData.fullContentMarkdown || null
     });
 
     if (response.success) {
@@ -371,10 +371,10 @@ async function extractContent() {
     const scriptName = platformToScript[platform] || platform;
     const scriptFile = `content-scripts/${scriptName}_extractor.js`;
 
-    // Inject Readability.js first for full content extraction
+    // Inject libraries first for full content extraction
     await chrome.scripting.executeScript({
       target: { tabId: tab.id },
-      files: ['lib/Readability.js']
+      files: ['lib/Readability.js', 'lib/turndown.js', 'lib/turndown-plugin-gfm.js']
     });
 
     // Then inject the platform-specific extractor

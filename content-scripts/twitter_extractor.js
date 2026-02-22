@@ -238,15 +238,17 @@
     extracted.platform = 'x';
     extracted.pageUrl = window.location.href;
 
-    // Extract full content via Readability if available
+    // Extract full content via Readability and convert to Markdown
     // For tweets, content.text is already the full content, but Readability
     // may help for linked articles within quote tweets
     if (typeof Readability !== 'undefined') {
       try {
         const clone = document.cloneNode(true);
         const article = new Readability(clone).parse();
-        if (article && article.content) {
-          extracted.fullContentHtml = article.content;
+        if (article && article.content && typeof TurndownService !== 'undefined') {
+          const td = new TurndownService({ headingStyle: 'atx', codeBlockStyle: 'fenced', bulletListMarker: '-' });
+          if (typeof turndownPluginGfm !== 'undefined') { td.use(turndownPluginGfm.gfm); }
+          extracted.fullContentMarkdown = td.turndown(article.content);
         }
       } catch (e) {
         console.warn('Readability extraction failed:', e);

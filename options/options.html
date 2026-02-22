@@ -21,19 +21,23 @@
         <h2 class="section-title">Configuration</h2>
 
         <div class="form-group">
-          <label for="kbFilePath" class="label">Knowledge Base File Path</label>
+          <label for="kbFilePath" class="label">Knowledge Base YAML File</label>
           <p class="help-text">
-            Enter the absolute path to your YAML knowledge base file.
-            Example: /Users/username/Documents/kb/curated_sources.yaml
+            Path to your curated_sources.yaml file. Bookmark folders will be
+            saved alongside it in the same directory.
+            <br>Example: /Users/username/Dropbox/AI_KB/08_bookmarked_content/curated_sources.yaml
           </p>
           <div class="input-group">
             <input
               type="text"
               id="kbFilePath"
               class="input"
-              placeholder="/path/to/your/knowledge-base.yaml"
+              placeholder="/path/to/AI_KB/08_bookmarked_content/curated_sources.yaml"
             >
           </div>
+          <p class="help-text" id="bookmarkDirHint" style="margin-top:6px; color:#059669; display:none;">
+            Bookmarks will be saved to: <strong id="bookmarkDirPath"></strong>
+          </p>
         </div>
 
         <div class="button-group">

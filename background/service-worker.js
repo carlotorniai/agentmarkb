@@ -10,9 +10,6 @@
  * - Full content bookmark extraction and Obsidian integration
  */
 
-// Import Turndown for HTML→Markdown conversion in service worker
-importScripts('lib/turndown.js', 'lib/turndown-plugin-gfm.js');
-
 const NATIVE_HOST_NAME = 'com.kb_manager.host';
 
 // Default bookmark output directory (relative to AI_KB root)
@@ -461,20 +458,6 @@ function generateSlug(title, url, datePublished) {
 }
 
 /**
- * Convert HTML to Markdown using Turndown with GFM support
- */
-function htmlToMarkdown(html) {
-  const turndownService = new TurndownService({
-    headingStyle: 'atx',
-    codeBlockStyle: 'fenced',
-    bulletListMarker: '-'
-  });
-  // Add GFM support (tables, strikethrough, task lists)
-  turndownService.use(turndownPluginGfm.gfm);
-  return turndownService.turndown(html);
-}
-
-/**
  * Build meta.yaml content string following the KB template schema
  */
 function buildMetaYaml({ slug, title, tags, sourceUrl, platform, authorName, sourceName, datePublished, dateBookmarked }) {
@@ -578,23 +561,18 @@ ${tagsYaml || '  []'}
  * Infers the AI_KB root from the curated_sources.yaml path.
  */
 function getBookmarkBaseDir(kbFilePath) {
-  // kbFilePath is something like /Users/.../AI_KB/curated_sources.yaml
-  // or /Users/.../AI_KB/08_bookmarked_content/curated_sources.yaml
-  // We want the AI_KB root + /08_bookmarked_content/
+  // kbFilePath is something like:
+  //   /Users/.../AI_KB/08_bookmarked_content/curated_sources.yaml
+  //   /Users/.../AI_KB/curated_sources.yaml
+  // Bookmark folders are saved in the same directory as the YAML file.
   const parts = kbFilePath.split('/');
-  // Find the AI_KB part
-  const aiKbIndex = parts.findIndex(p => p === 'AI_KB');
-  if (aiKbIndex >= 0) {
-    return parts.slice(0, aiKbIndex + 1).join('/') + '/' + BOOKMARK_SUBDIR;
-  }
-  // Fallback: use parent directory of the yaml file
-  return parts.slice(0, -1).join('/') + '/' + BOOKMARK_SUBDIR;
+  return parts.slice(0, -1).join('/');
 }
 
 /**
  * Save a bookmark with full content as a KB document folder
  */
-async function saveBookmark({ filePath, platform, authorData, contentData, topics, fullContentHtml }) {
+async function saveBookmark({ filePath, platform, authorData, contentData, topics, fullContentMarkdown }) {
   const dateBookmarked = new Date().toISOString().split('T')[0];
   const dateBookmarkedFull = new Date().toISOString();
   const title = contentData?.title || 'Untitled';
@@ -618,10 +596,10 @@ async function saveBookmark({ filePath, platform, authorData, contentData, topic
     sourceName = authorData?.source || '';
   }
 
-  // Convert HTML to Markdown
+  // Use pre-converted markdown from content script
   let bodyMarkdown = '';
-  if (fullContentHtml) {
-    bodyMarkdown = htmlToMarkdown(fullContentHtml);
+  if (fullContentMarkdown) {
+    bodyMarkdown = fullContentMarkdown;
   } else if (contentData?.text) {
     // For tweets/posts without full HTML, use the text directly
     bodyMarkdown = contentData.text;
@@ -687,7 +665,7 @@ async function saveBookmark({ filePath, platform, authorData, contentData, topic
     title: title,
     url: sourceUrl,
     slug: slug,
-    hasFullContent: !!fullContentHtml
+    hasFullContent: !!fullContentMarkdown
   });
 
   return {
@@ -695,7 +673,7 @@ async function saveBookmark({ filePath, platform, authorData, contentData, topic
     slug: slug,
     path: createResult.path,
     sha256: createResult.sha256,
-    hasFullContent: !!fullContentHtml,
+    hasFullContent: !!fullContentMarkdown,
     contentLength: bodyMarkdown.length
   };
 }
@@ -731,10 +709,10 @@ async function extractContent(tabId, platform) {
   const scriptFile = `content-scripts/${scriptName}_extractor.js`;
 
   try {
-    // Inject Readability.js first for full content extraction
+    // Inject libraries first for full content extraction
     await chrome.scripting.executeScript({
       target: { tabId: tabId },
-      files: ['lib/Readability.js']
+      files: ['lib/Readability.js', 'lib/turndown.js', 'lib/turndown-plugin-gfm.js']
     });
 
     // Then inject the platform-specific extractor
@@ -811,7 +789,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             authorData: message.authorData,
             contentData: message.contentData,
             topics: message.topics,
-            fullContentHtml: message.fullContentHtml
+            fullContentMarkdown: message.fullContentMarkdown
           });
 
         case 'extractContent':
