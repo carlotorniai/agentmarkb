@@ -287,6 +287,26 @@ body {
   text-overflow: ellipsis;
 }
 
+/* Content Status */
+.content-status {
+  margin-top: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.content-status.full-content {
+  background: #d1fae5;
+  color: #059669;
+}
+
+.content-status.metadata-only {
+  background: #fef3c7;
+  color: #d97706;
+}
+
 /* Topics */
 .topics-container {
   display: flex;

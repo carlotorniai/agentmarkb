@@ -439,6 +439,26 @@
       result.author.source
     );
 
+    // Extract full content via Readability if available
+    if (typeof Readability !== 'undefined') {
+      try {
+        const clone = document.cloneNode(true);
+        const article = new Readability(clone).parse();
+        if (article && article.content) {
+          result.fullContentHtml = article.content;
+          // Use Readability's title/excerpt as fallback
+          if (!result.content.title && article.title) {
+            result.content.title = article.title;
+          }
+          if (!result.content.summary && article.excerpt) {
+            result.content.summary = article.excerpt;
+          }
+        }
+      } catch (e) {
+        console.warn('Readability extraction failed:', e);
+      }
+    }
+
     return result;
   }
 

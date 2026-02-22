@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "KB Manager - Trusted Sources Knowledge Base",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Save articles, tweets, and posts to your local YAML knowledge base",
 
   "permissions": [
@@ -21,8 +21,7 @@
   ],
 
   "background": {
-    "service_worker": "background/service-worker.js",
-    "type": "module"
+    "service_worker": "background/service-worker.js"
   },
 
   "action": {
@@ -45,7 +44,7 @@
 
   "web_accessible_resources": [
     {
-      "resources": ["content-scripts/*.js"],
+      "resources": ["content-scripts/*.js", "lib/*.js"],
       "matches": ["<all_urls>"]
     }
   ]

@@ -303,6 +303,27 @@
     extracted.platform = 'substack';
     extracted.pageUrl = window.location.href;
 
+    // Extract full content via Readability if available
+    if (typeof Readability !== 'undefined') {
+      try {
+        const clone = document.cloneNode(true);
+        const article = new Readability(clone).parse();
+        if (article && article.content) {
+          extracted.fullContentHtml = article.content;
+          if (!extracted.content?.title && article.title) {
+            extracted.content = extracted.content || {};
+            extracted.content.title = article.title;
+          }
+          if (!extracted.content?.summary && article.excerpt) {
+            extracted.content = extracted.content || {};
+            extracted.content.summary = article.excerpt;
+          }
+        }
+      } catch (e) {
+        console.warn('Readability extraction failed:', e);
+      }
+    }
+
     return extracted;
   }
 

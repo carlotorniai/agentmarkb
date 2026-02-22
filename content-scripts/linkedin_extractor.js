@@ -361,6 +361,23 @@
     extracted.platform = 'linkedin';
     extracted.pageUrl = window.location.href;
 
+    // Extract full content via Readability if available (works well for Pulse articles)
+    if (typeof Readability !== 'undefined') {
+      try {
+        const clone = document.cloneNode(true);
+        const article = new Readability(clone).parse();
+        if (article && article.content) {
+          extracted.fullContentHtml = article.content;
+          if (!extracted.content?.title && article.title) {
+            extracted.content = extracted.content || {};
+            extracted.content.title = article.title;
+          }
+        }
+      } catch (e) {
+        console.warn('Readability extraction failed:', e);
+      }
+    }
+
     return extracted;
   }
 

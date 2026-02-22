@@ -238,6 +238,21 @@
     extracted.platform = 'x';
     extracted.pageUrl = window.location.href;
 
+    // Extract full content via Readability if available
+    // For tweets, content.text is already the full content, but Readability
+    // may help for linked articles within quote tweets
+    if (typeof Readability !== 'undefined') {
+      try {
+        const clone = document.cloneNode(true);
+        const article = new Readability(clone).parse();
+        if (article && article.content) {
+          extracted.fullContentHtml = article.content;
+        }
+      } catch (e) {
+        console.warn('Readability extraction failed:', e);
+      }
+    }
+
     return extracted;
   }
 

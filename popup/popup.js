@@ -44,6 +44,9 @@ const elements = {
   saveBtn: document.getElementById('saveBtn'),
   cancelBtn: document.getElementById('cancelBtn'),
 
+  // Content status
+  contentStatus: document.getElementById('contentStatus'),
+
   // Other
   settingsBtn: document.getElementById('settingsBtn'),
   goToSettingsBtn: document.getElementById('goToSettingsBtn'),
@@ -184,6 +187,17 @@ function displayExtractedData() {
   elements.contentTitle.textContent = title || 'Untitled';
   elements.contentText.textContent = text.substring(0, 200) + (text.length > 200 ? '...' : '') || 'No preview available';
 
+  // Show content extraction status
+  if (extractedData.fullContentHtml) {
+    const charCount = extractedData.fullContentHtml.length;
+    const displayCount = charCount > 1000 ? `${Math.round(charCount / 1000)}K` : charCount;
+    elements.contentStatus.textContent = `Full content extracted (${displayCount} chars)`;
+    elements.contentStatus.className = 'content-status full-content';
+  } else {
+    elements.contentStatus.textContent = 'Metadata only';
+    elements.contentStatus.className = 'content-status metadata-only';
+  }
+
   // Pre-select suggested topics
   if (extractedData.suggestedTopics) {
     extractedData.suggestedTopics.forEach((topic) => selectedTopics.add(topic));
@@ -297,36 +311,28 @@ async function saveToKB() {
     const contentData = buildContentData();
 
     const response = await chrome.runtime.sendMessage({
-      action: 'saveContent',
+      action: 'saveBookmark',
       filePath: kbFilePath,
       platform: extractedData.platform,
       authorData: authorData,
       contentData: contentData,
-      topics: Array.from(selectedTopics)
+      topics: Array.from(selectedTopics),
+      fullContentHtml: extractedData.fullContentHtml || null
     });
 
     if (response.success) {
-      let message = '';
+      let message = response.hasFullContent
+        ? `Saved with full content (${Math.round(response.contentLength / 1000)}K chars)`
+        : 'Saved (metadata only)';
+      message += ` to ${response.slug}`;
 
-      if (response.authorAdded) {
-        message = 'Author added to KB';
-      }
-
-      if (response.contentAdded) {
-        message += message ? ' and content saved!' : 'Content saved!';
-      } else if (response.contentDuplicate) {
-        message += message ? '. Content was already saved.' : 'Content was already saved.';
-      } else if (!contentData) {
-        message += '!';
-      }
-
-      elements.successMessage.textContent = message || 'Saved successfully!';
+      elements.successMessage.textContent = message;
       showState('successState');
 
       // Close popup after a delay
       setTimeout(() => {
         window.close();
-      }, 1500);
+      }, 2000);
     } else {
       throw new Error(response.error || 'Failed to save');
     }
@@ -365,6 +371,13 @@ async function extractContent() {
     const scriptName = platformToScript[platform] || platform;
     const scriptFile = `content-scripts/${scriptName}_extractor.js`;
 
+    // Inject Readability.js first for full content extraction
+    await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      files: ['lib/Readability.js']
+    });
+
+    // Then inject the platform-specific extractor
     const results = await chrome.scripting.executeScript({
       target: { tabId: tab.id },
       files: [scriptFile]

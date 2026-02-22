@@ -21,7 +21,8 @@ import struct
 import sys
 import os
 import fcntl
-from datetime import datetime
+import hashlib
+from datetime import datetime, timezone
 from pathlib import Path
 
 # Try to import yaml, install if needed
@@ -166,6 +167,66 @@ def test_connection(file_path):
     return result
 
 
+def create_bookmark(base_dir, slug, meta_yaml_str, content_md):
+    """Create the full KB document folder structure for a bookmark.
+
+    Creates:
+        <base_dir>/<slug>/
+        ├── meta.yaml
+        ├── assets/
+        │   └── content.md
+        └── canonicals/
+            └── retrieval.md  (symlink → ../assets/content.md)
+    """
+    base_path = Path(base_dir).expanduser()
+    doc_path = base_path / slug
+
+    # Check if already exists (dedup)
+    if doc_path.exists():
+        return {'success': False, 'error': f'Bookmark folder already exists: {slug}'}
+
+    # Create directory tree
+    assets_dir = doc_path / 'assets'
+    canonicals_dir = doc_path / 'canonicals'
+    assets_dir.mkdir(parents=True, exist_ok=True)
+    canonicals_dir.mkdir(parents=True, exist_ok=True)
+
+    # Write content.md
+    content_path = assets_dir / 'content.md'
+    content_path.write_text(content_md, encoding='utf-8')
+
+    # Compute SHA-256 of content.md
+    sha256 = hashlib.sha256(content_md.encode('utf-8')).hexdigest()
+
+    # Update the sha256 placeholder in meta.yaml if present
+    meta_yaml_str = meta_yaml_str.replace('SHA256_PLACEHOLDER', sha256)
+
+    # Write meta.yaml
+    meta_path = doc_path / 'meta.yaml'
+    meta_path.write_text(meta_yaml_str, encoding='utf-8')
+
+    # Create symlink for canonicals/retrieval.md → ../assets/content.md
+    symlink_path = canonicals_dir / 'retrieval.md'
+    symlink_path.symlink_to('../assets/content.md')
+
+    return {
+        'success': True,
+        'path': str(doc_path),
+        'sha256': sha256
+    }
+
+
+def check_exists(base_dir, slug):
+    """Check if a bookmark folder already exists."""
+    base_path = Path(base_dir).expanduser()
+    doc_path = base_path / slug
+    return {
+        'success': True,
+        'exists': doc_path.exists(),
+        'path': str(doc_path)
+    }
+
+
 def handle_message(message):
     """Process a message and return a response."""
     action = message.get('action')
@@ -195,6 +256,22 @@ def handle_message(message):
                 return {'success': False, 'error': 'No file path specified'}
             result = test_connection(file_path)
             return result
+
+        elif action == 'create_bookmark':
+            base_dir = message.get('baseDir')
+            slug = message.get('slug')
+            meta_yaml_str = message.get('metaYaml')
+            content_md = message.get('contentMd')
+            if not all([base_dir, slug, meta_yaml_str, content_md]):
+                return {'success': False, 'error': 'Missing required fields: baseDir, slug, metaYaml, contentMd'}
+            return create_bookmark(base_dir, slug, meta_yaml_str, content_md)
+
+        elif action == 'check_exists':
+            base_dir = message.get('baseDir')
+            slug = message.get('slug')
+            if not all([base_dir, slug]):
+                return {'success': False, 'error': 'Missing required fields: baseDir, slug'}
+            return check_exists(base_dir, slug)
 
         elif action == 'ping':
             return {'success': True, 'message': 'pong'}

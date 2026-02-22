@@ -7,9 +7,16 @@
  * - KB data caching
  * - Deduplication logic
  * - Topic index updates
+ * - Full content bookmark extraction and Obsidian integration
  */
 
+// Import Turndown for HTML→Markdown conversion in service worker
+importScripts('lib/turndown.js', 'lib/turndown-plugin-gfm.js');
+
 const NATIVE_HOST_NAME = 'com.kb_manager.host';
+
+// Default bookmark output directory (relative to AI_KB root)
+const BOOKMARK_SUBDIR = '08_bookmarked_content';
 
 // Cache for KB data
 let kbCache = null;
@@ -408,6 +415,291 @@ async function addToRecentAdditions(item) {
   await saveSettings({ recentAdditions: recentAdditions.slice(0, 10) });
 }
 
+// ============================================================
+// Bookmark (full content) functions
+// ============================================================
+
+/**
+ * Generate a slug for the bookmark folder name.
+ * Pattern: YYYY-MM-DD_descriptive-slug (max ~100 chars total)
+ */
+function generateSlug(title, url, datePublished) {
+  // Use datePublished if available, else today
+  let dateStr;
+  if (datePublished) {
+    try {
+      const d = new Date(datePublished);
+      if (!isNaN(d.getTime())) {
+        dateStr = d.toISOString().split('T')[0];
+      }
+    } catch {
+      // ignore
+    }
+  }
+  if (!dateStr) {
+    dateStr = new Date().toISOString().split('T')[0];
+  }
+
+  // Build slug from title, or fallback to URL path
+  let slugText = title || '';
+  if (!slugText) {
+    try {
+      slugText = new URL(url).pathname.replace(/\//g, ' ');
+    } catch {
+      slugText = 'untitled';
+    }
+  }
+
+  // Lowercase, replace non-alphanumeric with hyphens, collapse, trim
+  const slug = slugText
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .substring(0, 80);
+
+  return `${dateStr}_${slug}`;
+}
+
+/**
+ * Convert HTML to Markdown using Turndown with GFM support
+ */
+function htmlToMarkdown(html) {
+  const turndownService = new TurndownService({
+    headingStyle: 'atx',
+    codeBlockStyle: 'fenced',
+    bulletListMarker: '-'
+  });
+  // Add GFM support (tables, strikethrough, task lists)
+  turndownService.use(turndownPluginGfm.gfm);
+  return turndownService.turndown(html);
+}
+
+/**
+ * Build meta.yaml content string following the KB template schema
+ */
+function buildMetaYaml({ slug, title, tags, sourceUrl, platform, authorName, sourceName, datePublished, dateBookmarked }) {
+  const now = dateBookmarked || new Date().toISOString();
+  const tagsYaml = tags.map(t => `  - ${t}`).join('\n');
+
+  return `doc_id: "${slug}"
+doc_type: "bookmark"
+title: "${escapeYamlString(title)}"
+created_at: "${now}"
+updated_at: "${now}"
+language: "en"
+status: "final"
+visibility: "private"
+
+canonical:
+  path: "canonicals/retrieval.md"
+  generated_from: "assets/content.md"
+  generator: "kb_manager_chrome_extension"
+  generated_at: "${now}"
+
+source_of_truth:
+  path: "assets/content.md"
+  sha256: "SHA256_PLACEHOLDER"
+
+assets:
+  - path: "assets/content.md"
+    media_type: "text/markdown"
+    sha256: "SHA256_PLACEHOLDER"
+    created_at: "${now}"
+
+tags:
+${tagsYaml || '  []'}
+
+relationships:
+  derived_from: []
+  related: []
+
+bookmark_metadata:
+  source_url: "${escapeYamlString(sourceUrl)}"
+  platform: "${platform}"
+  author_name: "${escapeYamlString(authorName || '')}"
+  source_name: "${escapeYamlString(sourceName || '')}"
+  date_published: "${datePublished || ''}"
+  date_bookmarked: "${dateBookmarked || new Date().toISOString().split('T')[0]}"
+`;
+}
+
+/**
+ * Escape a string for use in YAML double-quoted values
+ */
+function escapeYamlString(str) {
+  if (!str) return '';
+  return str.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+}
+
+/**
+ * Build content.md with YAML frontmatter and article body
+ */
+function buildContentMarkdown({ title, sourceUrl, authorName, sourceName, platform, datePublished, dateBookmarked, tags, bodyMarkdown }) {
+  const tagsYaml = tags.map(t => `  - ${t}`).join('\n');
+
+  let frontmatter = `---
+title: "${escapeYamlString(title)}"
+source_url: "${escapeYamlString(sourceUrl)}"`;
+
+  if (authorName) {
+    frontmatter += `\nauthor: "${escapeYamlString(authorName)}"`;
+  }
+  if (sourceName) {
+    frontmatter += `\nsource: "${escapeYamlString(sourceName)}"`;
+  }
+
+  frontmatter += `
+platform: ${platform}
+date_published: "${datePublished || ''}"
+date_bookmarked: "${dateBookmarked}"
+tags:
+${tagsYaml || '  []'}
+---`;
+
+  let header = `\n# ${title}\n`;
+  if (sourceName) {
+    header += `\n**Source:** [${sourceName}](${sourceUrl})`;
+  } else {
+    header += `\n**Source:** [${sourceUrl}](${sourceUrl})`;
+  }
+  if (authorName) {
+    header += `\n**Author:** ${authorName}`;
+  }
+  if (datePublished) {
+    header += `\n**Published:** ${datePublished}`;
+  }
+  header += '\n\n---\n';
+
+  return frontmatter + header + '\n' + (bodyMarkdown || '*No content extracted.*');
+}
+
+/**
+ * Get the bookmark base directory from the KB file path.
+ * Infers the AI_KB root from the curated_sources.yaml path.
+ */
+function getBookmarkBaseDir(kbFilePath) {
+  // kbFilePath is something like /Users/.../AI_KB/curated_sources.yaml
+  // or /Users/.../AI_KB/08_bookmarked_content/curated_sources.yaml
+  // We want the AI_KB root + /08_bookmarked_content/
+  const parts = kbFilePath.split('/');
+  // Find the AI_KB part
+  const aiKbIndex = parts.findIndex(p => p === 'AI_KB');
+  if (aiKbIndex >= 0) {
+    return parts.slice(0, aiKbIndex + 1).join('/') + '/' + BOOKMARK_SUBDIR;
+  }
+  // Fallback: use parent directory of the yaml file
+  return parts.slice(0, -1).join('/') + '/' + BOOKMARK_SUBDIR;
+}
+
+/**
+ * Save a bookmark with full content as a KB document folder
+ */
+async function saveBookmark({ filePath, platform, authorData, contentData, topics, fullContentHtml }) {
+  const dateBookmarked = new Date().toISOString().split('T')[0];
+  const dateBookmarkedFull = new Date().toISOString();
+  const title = contentData?.title || 'Untitled';
+  const sourceUrl = contentData?.url || '';
+  const datePublished = contentData?.date_published || contentData?.date || '';
+
+  // Determine author and source names
+  let authorName = '';
+  let sourceName = '';
+  if (platform === 'substack') {
+    authorName = authorData?.author || authorData?.name || '';
+    sourceName = authorData?.name || '';
+  } else if (platform === 'x') {
+    authorName = authorData?.handle ? `@${authorData.handle}` : (authorData?.name || '');
+    sourceName = 'X (Twitter)';
+  } else if (platform === 'linkedin') {
+    authorName = authorData?.name || '';
+    sourceName = 'LinkedIn';
+  } else {
+    authorName = authorData?.name || '';
+    sourceName = authorData?.source || '';
+  }
+
+  // Convert HTML to Markdown
+  let bodyMarkdown = '';
+  if (fullContentHtml) {
+    bodyMarkdown = htmlToMarkdown(fullContentHtml);
+  } else if (contentData?.text) {
+    // For tweets/posts without full HTML, use the text directly
+    bodyMarkdown = contentData.text;
+  }
+
+  // Generate slug
+  const slug = generateSlug(title, sourceUrl, datePublished);
+
+  // Build meta.yaml
+  const metaYaml = buildMetaYaml({
+    slug,
+    title,
+    tags: topics || [],
+    sourceUrl,
+    platform,
+    authorName,
+    sourceName,
+    datePublished,
+    dateBookmarked: dateBookmarkedFull
+  });
+
+  // Build content.md
+  const contentMd = buildContentMarkdown({
+    title,
+    sourceUrl,
+    authorName,
+    sourceName,
+    platform,
+    datePublished,
+    dateBookmarked,
+    tags: topics || [],
+    bodyMarkdown
+  });
+
+  // Get base directory for bookmarks
+  const baseDir = getBookmarkBaseDir(filePath);
+
+  // Send to native host to create the folder structure
+  const createResult = await sendNativeMessage({
+    action: 'create_bookmark',
+    baseDir: baseDir,
+    slug: slug,
+    metaYaml: metaYaml,
+    contentMd: contentMd
+  });
+
+  if (!createResult.success) {
+    throw new Error(createResult.error || 'Failed to create bookmark folder');
+  }
+
+  // Also save to curated_sources.yaml for backward compatibility
+  try {
+    await saveToKB(filePath, platform, authorData, contentData, topics);
+  } catch (e) {
+    // Don't fail the whole operation if the index update fails
+    console.warn('Failed to update curated_sources.yaml index:', e);
+  }
+
+  // Add to recent additions
+  await addToRecentAdditions({
+    platform,
+    author: authorName,
+    title: title,
+    url: sourceUrl,
+    slug: slug,
+    hasFullContent: !!fullContentHtml
+  });
+
+  return {
+    success: true,
+    slug: slug,
+    path: createResult.path,
+    sha256: createResult.sha256,
+    hasFullContent: !!fullContentHtml,
+    contentLength: bodyMarkdown.length
+  };
+}
+
 /**
  * Detect platform from URL
  */
@@ -439,6 +731,13 @@ async function extractContent(tabId, platform) {
   const scriptFile = `content-scripts/${scriptName}_extractor.js`;
 
   try {
+    // Inject Readability.js first for full content extraction
+    await chrome.scripting.executeScript({
+      target: { tabId: tabId },
+      files: ['lib/Readability.js']
+    });
+
+    // Then inject the platform-specific extractor
     const results = await chrome.scripting.executeScript({
       target: { tabId: tabId },
       files: [scriptFile]
@@ -504,6 +803,16 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             url: message.contentData?.url
           });
           return result;
+
+        case 'saveBookmark':
+          return await saveBookmark({
+            filePath: message.filePath,
+            platform: message.platform,
+            authorData: message.authorData,
+            contentData: message.contentData,
+            topics: message.topics,
+            fullContentHtml: message.fullContentHtml
+          });
 
         case 'extractContent':
           return await extractContent(message.tabId, message.platform);
