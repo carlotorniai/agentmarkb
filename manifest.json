@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "KB Manager - Trusted Sources Knowledge Base",
+  "name": "AgentMarKB — Web to Knowledge Base for AI Agents",
   "version": "1.1.0",
-  "description": "Save articles, tweets, and posts to your local YAML knowledge base",
+  "description": "Extract full web articles as Obsidian-compatible Markdown for RAG pipelines, AI agent swarms, and knowledge management",
 
   "permissions": [
     "activeTab",

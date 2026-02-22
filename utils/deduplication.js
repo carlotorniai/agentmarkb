@@ -1,5 +1,5 @@
 /**
- * Deduplication Utilities for KB Manager
+ * Deduplication Utilities for AgentMarKB
  *
  * Provides URL and identifier normalization for detecting duplicates
  * across the knowledge base.

@@ -1,7 +1,7 @@
 #!/bin/bash
 #
-# KB Manager Native Host Installation Script
-# This script installs the native messaging host for macOS Chrome
+# AgentMarKB Native Host Installation Script
+# This script installs the native messaging host for Chromium-based browsers
 #
 
 set -e
@@ -13,7 +13,7 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 echo -e "${GREEN}========================================${NC}"
-echo -e "${GREEN}  KB Manager Native Host Installer${NC}"
+echo -e "${GREEN}  AgentMarKB Native Host Installer${NC}"
 echo -e "${GREEN}========================================${NC}"
 echo ""
 
@@ -66,7 +66,7 @@ fi
 # Create the native messaging host manifest
 MANIFEST_CONTENT='{
   "name": "com.kb_manager.host",
-  "description": "KB Manager Native Host for reading/writing YAML knowledge base",
+  "description": "AgentMarKB Native Host for reading/writing YAML knowledge base",
   "path": "'"$HOST_PATH"'",
   "type": "stdio",
   "allowed_origins": [

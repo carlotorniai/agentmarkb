@@ -1,5 +1,5 @@
 /**
- * KB Manager - Background Service Worker
+ * AgentMarKB - Background Service Worker
  *
  * Central coordinator for the extension. Handles:
  * - Native messaging communication
@@ -825,4 +825,4 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 // Log when service worker starts
-console.log('KB Manager service worker started');
+console.log('AgentMarKB service worker started');

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Native Messaging Host for KB Manager Chrome Extension
+Native Messaging Host for AgentMarKB Chrome Extension
 
 This script handles communication between the Chrome extension and the local
 file system to read/write the YAML knowledge base.
@@ -14,6 +14,8 @@ Actions:
 - read: Read and parse the YAML file, return as JSON
 - write: Write JSON data to YAML file
 - test: Test connection and file access
+- create_bookmark: Create a full KB document folder for a bookmark
+- check_exists: Check if a bookmark folder already exists
 """
 
 import json

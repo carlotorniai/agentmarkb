@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# KB Manager Native Host Uninstallation Script
+# AgentMarKB Native Host Uninstallation Script
 #
 
 set -e
@@ -10,7 +10,7 @@ GREEN='\033[0;32m'
 NC='\033[0m'
 
 echo -e "${GREEN}========================================${NC}"
-echo -e "${GREEN}  KB Manager Native Host Uninstaller${NC}"
+echo -e "${GREEN}  AgentMarKB Native Host Uninstaller${NC}"
 echo -e "${GREEN}========================================${NC}"
 echo ""
 

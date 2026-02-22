@@ -1,5 +1,5 @@
 /**
- * KB Manager Options Page Script
+ * AgentMarKB Options Page Script
  *
  * Handles settings configuration including:
  * - KB file path configuration

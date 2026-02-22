@@ -1,238 +1,299 @@
-# KB Manager - Trusted Sources Knowledge Base Manager
+<p align="center">
+  <img src="icons/logo.svg" alt="AgentMarKB Logo" width="120">
+</p>
 
-A Chrome Extension that allows you to quickly save articles, tweets, and posts to a local YAML-based knowledge base on macOS.
+<h1 align="center">AgentMarKB</h1>
+<p align="center"><strong>Agentic AI Knowledge Base from Your Browser</strong></p>
+
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT License"></a>
+  <img src="https://img.shields.io/badge/Chrome-MV3-green.svg" alt="Chrome MV3">
+  <img src="https://img.shields.io/badge/platform-macOS%20%C2%B7%20Linux-lightgrey.svg" alt="macOS · Linux">
+  <a href="CONTRIBUTING.md"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" alt="PRs Welcome"></a>
+</p>
+
+<p align="center">
+  Turn any web page into structured Markdown for your Obsidian vault,<br>
+  RAG pipeline, and agentic AI workflows.
+</p>
+
+---
+
+## Why AgentMarKB?
+
+Your AI agents are only as good as the knowledge you feed them. AgentMarKB is a Chrome extension that captures full web articles as clean Markdown with rich YAML metadata — ready for Obsidian, RAG retrieval, agentic AI swarms, and knowledge management systems.
+
+**The missing link between your browser and your AI knowledge base.**
+
+Bookmarks are dead ends. You save articles but never use them. Your Obsidian vault is disconnected from your browsing. Your AI agents can't access what you read. AgentMarKB fixes all of that — turning every saved page into a structured, agent-ready document in your local knowledge base.
+
+Built with [Claude Code](https://claude.ai/code).
 
 ## Features
 
-- **Multi-Platform Support**: Extract content from X (Twitter), LinkedIn, Substack, and generic web pages
-- **Smart Extraction**: Automatically extracts author info, content preview, publication date, and more
-- **Topic Management**: Suggest and assign topics to organize your saved content
-- **Duplicate Detection**: Prevents saving the same content twice
-- **Local Storage**: All data is stored in a local YAML file that you control
+- **Full Content Extraction** — Mozilla Readability strips away clutter, Turndown converts to clean Markdown
+- **Obsidian-Native Output** — YAML frontmatter, folder structure with `meta.yaml` + `assets/` + `canonicals/` — works with Dataview, tags, graph view
+- **Multi-Platform** — X/Twitter, LinkedIn, Substack, and any website (JSON-LD, OpenGraph, meta tags)
+- **Agent-Ready Metadata** — Structured YAML with source URL, author, date, topics, SHA-256 hash — designed for RAG pipelines and agentic retrieval
+- **Local-First** — Your data stays on your file system. No cloud, no tracking, no accounts
+- **Smart Deduplication** — URL normalization prevents duplicate saves
+- **Knowledge Base File System** — Each bookmark becomes a self-contained document folder following a consistent KB convention
+- **Migration Tool** — Convert existing YAML bookmarks to the new Markdown format
 
-## Supported Platforms
+## Quick Start
 
-- **X (Twitter)** - Individual tweets and author profiles
-- **LinkedIn** - Posts and author profiles
-- **Substack** - Articles and publication pages
-- **Generic Web Pages** - Articles from McKinsey, BCG, HBR, and other sites
+```bash
+# 1. Clone the repo
+git clone https://github.com/carlotorniai/agentmarkb.git
+cd agentmarkb
+
+# 2. Load in Chrome: chrome://extensions → Developer mode → Load unpacked → select this folder
+
+# 3. Install the native messaging host
+cd native-host && ./install.sh
+
+# 4. Open extension settings → set your KB YAML path → Test Connection
+
+# 5. Navigate to any article → click the extension icon → Save to KB
+```
+
+## How It Works
+
+```
+┌─────────────┐     ┌──────────────────┐     ┌──────────────────┐
+│   Browser    │     │  Chrome Extension │     │   Native Host    │
+│              │────▶│                  │────▶│   (Python)       │
+│  Any web     │     │  Content Scripts  │     │                  │
+│  article     │     │  (Readability +   │     │  Creates KB      │
+│              │     │   Turndown)       │     │  document folder │
+└─────────────┘     │                  │     │                  │
+                    │  Service Worker   │     │  meta.yaml       │
+                    │  (orchestrator)   │     │  assets/content.md│
+                    └──────────────────┘     │  canonicals/     │
+                                             └──────────────────┘
+                                                      │
+                                                      ▼
+                                             ┌──────────────────┐
+                                             │  Your Obsidian   │
+                                             │  Vault / KB      │
+                                             │                  │
+                                             │  Ready for RAG,  │
+                                             │  AI agents,      │
+                                             │  Dataview        │
+                                             └──────────────────┘
+```
+
+## Output Format
+
+Each saved article becomes a self-contained document folder:
+
+```
+your-kb-directory/
+└── 2026-02-22_article-title-slug/
+    ├── meta.yaml              # Full document metadata
+    ├── assets/
+    │   └── content.md         # Article as Markdown with YAML frontmatter
+    └── canonicals/
+        └── retrieval.md       # Symlink → ../assets/content.md
+```
+
+**content.md** includes YAML frontmatter compatible with Obsidian Dataview:
+
+```yaml
+---
+title: "Article Title"
+source_url: "https://example.com/article"
+author: "Author Name"
+source: "Publication Name"
+platform: generic_web
+date_published: "2026-02-20"
+date_bookmarked: "2026-02-22"
+tags:
+  - ai
+  - knowledge-management
+---
+```
+
+**meta.yaml** contains the full KB document schema with SHA-256 hash, relationships, and provenance tracking.
 
 ## Installation
 
-### Step 1: Install the Chrome Extension
+### Prerequisites
 
-1. Open Chrome and navigate to `chrome://extensions/`
-2. Enable **Developer mode** (toggle in the top right corner)
-3. Click **Load unpacked**
-4. Select the extension folder (the one containing `manifest.json`)
-5. The extension should now appear in your extensions list
+- Python 3.6+ with pip
+- Google Chrome, Brave, Edge, or any Chromium-based browser
 
-### Step 2: Install the Native Messaging Host
+### Step 1: Clone the Repository
 
-The native messaging host is required to read and write your local YAML file. Chrome extensions cannot access the file system directly, so this component bridges that gap.
-
-1. Open Terminal on your Mac
-
-2. Navigate to the native-host folder:
-   ```bash
-   cd /path/to/extension/native-host
-   ```
-
-3. Make the install script executable (if not already):
-   ```bash
-   chmod +x install.sh
-   ```
-
-4. Run the install script:
-   ```bash
-   ./install.sh
-   ```
-
-5. When prompted, enter your Chrome extension ID. You can find this on the `chrome://extensions/` page after loading the extension.
-
-### Step 3: Configure the Extension
-
-1. Click the KB Manager extension icon in Chrome
-2. Click the settings gear icon, or go to the extension options page
-3. Enter the absolute path to your YAML knowledge base file (e.g., `/Users/username/Documents/kb/curated_sources.yaml`)
-4. Click **Test Connection** to verify everything is working
-5. Click **Save Settings**
-
-## Usage
-
-### Saving Content
-
-1. Navigate to a tweet, LinkedIn post, Substack article, or any web article
-2. Click the KB Manager extension icon
-3. Review the extracted content and author information
-4. Select or add topics
-5. Optionally add a summary
-6. Click **Save to KB**
-
-### Knowledge Base Structure
-
-Your knowledge base is stored as a YAML file with this structure:
-
-```yaml
-version: 1
-last_updated: "2024-01-15"
-
-favorite_authors:
-  x:
-    - handle: "emollick"
-      name: "Ethan Mollick"
-      topics: ["ai", "education", "research"]
-      saved_posts:
-        - url: "https://x.com/emollick/status/..."
-          text: "Tweet preview text..."
-          date_saved: "2024-01-15"
-          topics: ["ai"]
-
-  substack:
-    - name: "Stratechery"
-      url: "https://stratechery.com"
-      author: "Ben Thompson"
-      topics: ["technology", "business"]
-      saved_articles:
-        - title: "Article Title"
-          url: "https://..."
-          date_published: "2024-01-10"
-          date_saved: "2024-01-15"
-          summary: "Article summary..."
-          topics: ["technology"]
-
-  linkedin:
-    - name: "Author Name"
-      profile_url: "https://linkedin.com/in/username"
-      topics: ["leadership", "business"]
-      saved_posts:
-        - url: "https://linkedin.com/posts/..."
-          preview: "Post preview..."
-          date_saved: "2024-01-15"
-
-  generic_web:
-    - name: "Author Name"
-      source: "McKinsey & Company"
-      topics: ["strategy", "consulting"]
-      saved_articles:
-        - title: "Article Title"
-          url: "https://..."
-          date_published: "2024-01-01"
-          date_saved: "2024-01-15"
-
-topic_index:
-  ai: ["@emollick", "Stratechery"]
-  technology: ["Stratechery"]
-  strategy: ["McKinsey Author"]
+```bash
+git clone https://github.com/carlotorniai/agentmarkb.git
+cd agentmarkb
 ```
+
+### Step 2: Load the Extension
+
+1. Open your Chromium-based browser
+2. Navigate to the extensions page:
+   - Chrome: `chrome://extensions/`
+   - Brave: `brave://extensions/`
+   - Edge: `edge://extensions/`
+3. Enable **Developer mode** (toggle in the top right)
+4. Click **Load unpacked**
+5. Select the `agentmarkb` folder (the one containing `manifest.json`)
+6. Copy the **extension ID** shown under the extension name — you'll need it next
+
+### Step 3: Install the Native Messaging Host
+
+The native host bridges Chrome's sandbox to your local file system.
+
+#### macOS
+
+```bash
+cd native-host
+./install.sh
+# When prompted, paste your extension ID
+```
+
+#### Linux
+
+```bash
+cd native-host
+./install.sh
+```
+
+The install script auto-detects your OS. On Linux, manifests are installed to:
+- Chrome: `~/.config/google-chrome/NativeMessagingHosts/`
+- Brave: `~/.config/BraveSoftware/Brave-Browser/NativeMessagingHosts/`
+- Chromium: `~/.config/chromium/NativeMessagingHosts/`
+
+#### Windows
+
+> Windows support is coming soon. Contributions welcome!
+
+### Step 4: Configure
+
+1. Click the AgentMarKB extension icon → Settings (gear icon)
+2. Enter the absolute path to your knowledge base YAML file
+   - Example: `/Users/you/Obsidian/MyVault/bookmarks/curated_sources.yaml`
+3. Click **Test Connection** to verify
+4. Click **Save Settings**
+
+The bookmark document folders will be created alongside the YAML file in the same directory.
+
+### Browser Compatibility
+
+| Browser  | macOS | Linux | Windows |
+|----------|:-----:|:-----:|:-------:|
+| Chrome   |  Yes  |  Yes  |  Soon   |
+| Brave    |  Yes  |  Yes  |  Soon   |
+| Edge     |  Yes  |  Yes  |  Soon   |
+| Chromium |  Yes  |  Yes  |  Soon   |
+
+## Supported Platforms
+
+| Platform     | What's Extracted                                    | Content Type |
+|-------------|-----------------------------------------------------|-------------|
+| X / Twitter  | Tweet text, author handle, date, profile info      | Post        |
+| LinkedIn     | Post text, author name, profile URL                | Post        |
+| Substack     | Full article, author, publication, date            | Article     |
+| Any website  | Full article via Readability, JSON-LD, OpenGraph   | Article     |
+
+## Configuration
+
+**KB YAML Path** — The path to your `curated_sources.yaml` file. This file indexes all saved content with author metadata, topics, and URLs.
+
+**Bookmark Directory** — Automatically inferred as the parent directory of your YAML file. Each bookmark creates a subfolder here with the full document structure.
+
+Example layout:
+```
+~/Obsidian/MyVault/bookmarks/
+├── curated_sources.yaml                          # Index file
+├── 2026-02-20_how-rag-pipelines-work/           # Bookmark folder
+│   ├── meta.yaml
+│   ├── assets/content.md
+│   └── canonicals/retrieval.md
+├── 2026-02-21_agent-swarms-knowledge-work/
+│   └── ...
+```
+
+## Migrating Existing Bookmarks
+
+If you have bookmarks in the old YAML-only format, convert them to the new Markdown folder structure:
+
+```bash
+# Install migration dependencies
+pip install -r requirements.txt
+
+# Dry run — preview what will be created
+python3 scripts/migrate_bookmarks.py --dry-run /path/to/curated_sources.yaml
+
+# Run the migration
+python3 scripts/migrate_bookmarks.py /path/to/curated_sources.yaml
+```
+
+## Use with AI Agents
+
+AgentMarKB's output format is designed for agentic AI workflows:
+
+- **RAG Pipelines** — Each `content.md` is a clean Markdown document with rich YAML frontmatter. Ingest directly into vector databases (Chroma, Pinecone, Weaviate) for retrieval-augmented generation.
+- **Obsidian + Dataview** — Query your bookmarks with Dataview. Filter by tags, date, platform, author. Your graph view shows connections between saved knowledge.
+- **Agent File System Access** — The consistent folder structure (`meta.yaml` + `assets/` + `canonicals/`) makes it trivial for AI agents to traverse, index, and reason over your knowledge base.
+- **MCP Integration** — Use the KB folder convention with Model Context Protocol servers for direct agent access to your bookmarked knowledge.
+
+Your Obsidian vault becomes the RAG corpus. Every bookmark you save is a structured document your agents can retrieve, reason over, and learn from. The knowledge base compounds over time — and so does your agents' capability.
 
 ## Troubleshooting
 
-### "Native messaging host not found" Error
+| Error | Cause | Fix |
+|-------|-------|-----|
+| "Native messaging host not found" | Native host not installed | Run `cd native-host && ./install.sh` |
+| "Access forbidden" | Extension ID mismatch | Re-run install script with correct extension ID |
+| Content not extracting | Page hasn't fully loaded | Refresh the page, then try again |
+| Python/PyYAML errors | Missing Python dependency | Run `python3 -m pip install pyyaml` |
+| "Failed to create bookmark folder" | Directory permissions | Check write access to your KB directory |
+| Connection test fails | Wrong YAML path | Verify the path exists and is writable |
 
-This error occurs when the native host is not properly installed.
-
-1. Make sure you ran the install script:
-   ```bash
-   cd native-host && ./install.sh
-   ```
-
-2. Verify the host manifest exists:
-   ```bash
-   ls ~/Library/Application\ Support/Google/Chrome/NativeMessagingHosts/
-   ```
-   You should see `com.kb_manager.host.json`
-
-3. Check the manifest contains the correct extension ID
-
-### "Access forbidden" Error
-
-This error occurs when the extension ID in the native host manifest doesn't match your extension.
-
-1. Get your extension ID from `chrome://extensions/`
-2. Re-run the install script with the correct ID:
-   ```bash
-   ./install.sh
-   ```
-
-### Content Not Extracting Properly
-
-Web page structures change frequently. If content extraction isn't working:
-
-1. Try refreshing the page before clicking the extension
-2. Make sure the page has fully loaded
-3. Some sites may block content extraction
-
-### Python/PyYAML Issues
-
-The native host requires Python 3 and PyYAML. If you encounter Python errors:
+### Verifying the Native Host
 
 ```bash
-# Check Python version
-python3 --version
+# Check the manifest is installed
+ls ~/Library/Application\ Support/Google/Chrome/NativeMessagingHosts/com.kb_manager.host.json
 
-# Install PyYAML if missing
-python3 -m pip install pyyaml
+# On Linux:
+ls ~/.config/google-chrome/NativeMessagingHosts/com.kb_manager.host.json
+
+# Verify Python and PyYAML
+python3 -c "import yaml; print('PyYAML OK')"
 ```
-
-## File Structure
-
-```
-kb-chrome-extension/
-├── manifest.json           # Extension configuration
-├── popup/
-│   ├── popup.html         # Popup UI
-│   ├── popup.css          # Popup styles
-│   └── popup.js           # Popup logic
-├── options/
-│   ├── options.html       # Settings page
-│   ├── options.css        # Settings styles
-│   └── options.js         # Settings logic
-├── content-scripts/
-│   ├── twitter_extractor.js   # X/Twitter extraction
-│   ├── linkedin_extractor.js  # LinkedIn extraction
-│   ├── substack_extractor.js  # Substack extraction
-│   └── generic_extractor.js   # Generic page extraction
-├── background/
-│   └── service-worker.js  # Background service worker
-├── native-host/
-│   ├── kb_host.py         # Native messaging host
-│   ├── install.sh         # Installation script
-│   └── uninstall.sh       # Uninstallation script
-├── utils/
-│   └── deduplication.js   # Deduplication utilities
-├── icons/
-│   ├── icon16.png
-│   ├── icon48.png
-│   └── icon128.png
-└── README.md
-```
-
-## Uninstallation
-
-### Remove Native Host
-
-```bash
-cd native-host && ./uninstall.sh
-```
-
-### Remove Extension
-
-1. Go to `chrome://extensions/`
-2. Find KB Manager and click **Remove**
-
-## Privacy
-
-All your data stays on your local machine. The extension:
-- Does NOT send any data to external servers
-- Does NOT track your browsing
-- Does NOT require any online accounts
-- Stores everything in a local YAML file you control
-
-## License
-
-MIT License - feel free to modify and use as you like.
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit issues or pull requests.
+We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on:
+- Reporting bugs
+- Requesting features
+- Development setup
+- Submitting pull requests
+
+## Privacy & Security
+
+AgentMarKB is fully local-first:
+
+- **No telemetry** — Zero tracking, analytics, or data collection
+- **No network calls** — The extension only communicates with the page you're viewing and your local file system
+- **No accounts** — No sign-up, no cloud, no sync
+- **Open source** — Every line of code is auditable
+- **Your data, your machine** — All bookmarks are stored as plain files you control
+
+See [SECURITY.md](SECURITY.md) for vulnerability reporting.
+
+## License
+
+[MIT](LICENSE) — free to use, modify, and distribute.
+
+## Acknowledgments
+
+- [Mozilla Readability](https://github.com/mozilla/readability) — Article content extraction
+- [Turndown](https://github.com/mixmark-io/turndown) — HTML to Markdown conversion
+- [Turndown GFM Plugin](https://github.com/mixmark-io/turndown-plugin-gfm) — GitHub Flavored Markdown support
+- [Obsidian](https://obsidian.md) — The knowledge management tool that inspired our output format
+- [Claude Code](https://claude.ai/code) — AI-assisted development

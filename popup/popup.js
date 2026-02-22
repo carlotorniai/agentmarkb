@@ -1,5 +1,5 @@
 /**
- * KB Manager Popup Script
+ * AgentMarKB Popup Script
  *
  * Handles the popup UI logic including:
  * - Extracting content from the current page

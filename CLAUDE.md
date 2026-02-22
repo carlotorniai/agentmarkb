@@ -2,40 +2,36 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+For detailed architecture documentation, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+
 ## Project Overview
 
-KB Manager is a Chrome Extension (Manifest V3) that saves articles, tweets, and posts to a local YAML-based knowledge base on macOS. It uses a native messaging host to bridge Chrome's sandbox restrictions for local file access.
+AgentMarKB is a Chrome Extension (Manifest V3) that extracts full web articles, tweets, and posts and saves them as Obsidian-compatible Markdown for RAG pipelines, AI agent swarms, and knowledge management on macOS. It uses a native messaging host to bridge Chrome's sandbox restrictions for local file access.
 
-## Architecture
+## Key File Locations
 
-**Two-part system:**
-1. **Chrome Extension** - Handles UI, content extraction, and orchestration
-2. **Native Messaging Host** (`native-host/kb_host.py`) - Python script that reads/writes the local YAML file
+- **Service Worker:** `background/service-worker.js` -- central coordinator
+- **Native Host:** `native-host/kb_host.py` -- Python script for local filesystem ops
+- **Content Scripts:** `content-scripts/` -- platform-specific extractors (`twitter_extractor.js`, `linkedin_extractor.js`, `substack_extractor.js`, `generic_extractor.js`)
+- **Libraries:** `lib/` -- Readability, Turndown (HTML-to-Markdown)
+- **Popup UI:** `popup/`
+- **Options UI:** `options/`
+- **Utilities:** `utils/deduplication.js`
+- **Manifest:** `manifest.json` (MV3)
 
-**Data flow:**
-```
-Popup/Options UI  ←→  Service Worker  ←→  Native Host (Python)  ←→  YAML File
-                           ↑
-                    Content Scripts
-                    (injected per-platform)
-```
+## Platform Detection
 
-**Service Worker** (`background/service-worker.js`) is the central coordinator:
-- Routes messages between popup, content scripts, and native host
-- Caches KB data in memory
-- Handles deduplication logic and topic index updates
-- Uses `chrome.runtime.sendNativeMessage()` for native host communication
+The service worker detects platforms via URL hostname:
+- `twitter.com` or `x.com` -> platform `x`
+- `linkedin.com` -> platform `linkedin`
+- `*.substack.com` -> platform `substack`
+- Everything else -> platform `generic_web`
 
-**Content Scripts** are dynamically injected based on detected platform:
-- `twitter_extractor.js` → X/Twitter
-- `linkedin_extractor.js` → LinkedIn
-- `substack_extractor.js` → Substack
-- `generic_extractor.js` → All other sites (uses JSON-LD, OpenGraph, meta tags)
+Content key: `x` and `linkedin` use `saved_posts`; `substack` and `generic_web` use `saved_articles`.
 
-**Native Host Protocol:**
-- Messages: JSON objects with `action` field (`read`, `write`, `test`, `ping`)
-- Communication: stdin/stdout with 4-byte little-endian length prefix
-- File locking via `fcntl` for concurrent access protection
+## Native Host Actions
+
+`read`, `write`, `test`, `create_bookmark`, `check_exists`, `ping` -- all JSON over stdin/stdout with 4-byte LE length prefix.
 
 ## Development Commands
 
@@ -59,19 +55,3 @@ python3 -c "import yaml; print('OK')"
 2. Enable Developer mode
 3. Click "Load unpacked" and select this folder
 4. Copy the extension ID for native host installation
-
-## Platform Detection
-
-The service worker detects platforms via URL hostname:
-- `twitter.com` or `x.com` → platform `x`
-- `linkedin.com` → platform `linkedin`
-- `*.substack.com` → platform `substack`
-- Everything else → platform `generic_web`
-
-## KB Data Structure
-
-Authors are stored under `favorite_authors.[platform][]`. Content storage key varies:
-- `x` and `linkedin` → `saved_posts`
-- `substack` and `generic_web` → `saved_articles`
-
-Deduplication normalizes URLs (removes tracking params, normalizes x.com/twitter.com) and author handles (lowercase, no @).
