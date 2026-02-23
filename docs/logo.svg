@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <defs>
+    <clipPath id="bookmark-clip">
+      <path d="M12,0 H116 Q128,0 128,12 V100 L96,128 L64,108 L32,128 L0,100 V12 Q0,0 12,0 Z"/>
+    </clipPath>
+  </defs>
+
+  <!-- Bookmark/shield shape background -->
+  <path d="M12,0 H116 Q128,0 128,12 V100 L96,128 L64,108 L32,128 L0,100 V12 Q0,0 12,0 Z"
+        fill="#1e3a5f"/>
+
+  <!-- Neural network edges (subtle teal lines) -->
+  <g stroke="#00d4aa" stroke-opacity="0.25" stroke-width="1.2" fill="none"
+     clip-path="url(#bookmark-clip)">
+    <!-- Top tier connections -->
+    <line x1="26" y1="19" x2="64" y2="10"/>
+    <line x1="64" y1="10" x2="102" y2="19"/>
+    <!-- Top to upper-mid -->
+    <line x1="26" y1="19" x2="15" y2="45"/>
+    <line x1="102" y1="19" x2="113" y2="45"/>
+    <!-- Upper-mid to mid -->
+    <line x1="15" y1="45" x2="19" y2="70"/>
+    <line x1="113" y1="45" x2="109" y2="70"/>
+    <!-- Mid horizontal -->
+    <line x1="19" y1="70" x2="64" y2="64"/>
+    <line x1="64" y1="64" x2="109" y2="70"/>
+    <!-- Center vertical -->
+    <line x1="64" y1="10" x2="64" y2="64"/>
+    <!-- Cross connections -->
+    <line x1="15" y1="45" x2="64" y2="64"/>
+    <line x1="113" y1="45" x2="64" y2="64"/>
+    <!-- Mid to lower -->
+    <line x1="19" y1="70" x2="32" y2="96"/>
+    <line x1="64" y1="64" x2="64" y2="92"/>
+    <line x1="109" y1="70" x2="96" y2="96"/>
+    <!-- Lower horizontal -->
+    <line x1="32" y1="96" x2="64" y2="92"/>
+    <line x1="64" y1="92" x2="96" y2="96"/>
+    <!-- Lower to bottom -->
+    <line x1="32" y1="96" x2="49" y2="113"/>
+    <line x1="64" y1="92" x2="49" y2="113"/>
+    <line x1="64" y1="92" x2="79" y2="113"/>
+    <line x1="96" y1="96" x2="79" y2="113"/>
+    <line x1="49" y1="113" x2="79" y2="113"/>
+  </g>
+
+  <!-- Neural network nodes (teal dots) -->
+  <g fill="#00d4aa" fill-opacity="0.55" clip-path="url(#bookmark-clip)">
+    <!-- Top tier -->
+    <circle cx="26" cy="19" r="3.5"/>
+    <circle cx="64" cy="10" r="3.5"/>
+    <circle cx="102" cy="19" r="3.5"/>
+    <!-- Upper middle -->
+    <circle cx="15" cy="45" r="3.5"/>
+    <circle cx="113" cy="45" r="3.5"/>
+    <!-- Middle -->
+    <circle cx="19" cy="70" r="3.5"/>
+    <circle cx="64" cy="64" r="3.5"/>
+    <circle cx="109" cy="70" r="3.5"/>
+    <!-- Lower -->
+    <circle cx="32" cy="96" r="3.5"/>
+    <circle cx="64" cy="92" r="3.5"/>
+    <circle cx="96" cy="96" r="3.5"/>
+    <!-- Bottom -->
+    <circle cx="49" cy="113" r="3.5"/>
+    <circle cx="79" cy="113" r="3.5"/>
+  </g>
+
+  <!-- KB text (white, prominent, centered) -->
+  <text x="64" y="74"
+        font-family="'Helvetica Neue', Helvetica, Arial, sans-serif"
+        font-weight="700"
+        font-size="52"
+        fill="#ffffff"
+        text-anchor="middle"
+        dominant-baseline="central"
+        letter-spacing="-1">KB</text>
+</svg>
