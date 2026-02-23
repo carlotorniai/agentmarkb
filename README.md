@@ -59,29 +59,9 @@ cd native-host && ./install.sh
 
 ## How It Works
 
-```
-┌─────────────┐     ┌──────────────────┐     ┌──────────────────┐
-│   Browser    │     │  Chrome Extension │     │   Native Host    │
-│              │────▶│                  │────▶│   (Python)       │
-│  Any web     │     │  Content Scripts  │     │                  │
-│  article     │     │  (Readability +   │     │  Creates KB      │
-│              │     │   Turndown)       │     │  document folder │
-└─────────────┘     │                  │     │                  │
-                    │  Service Worker   │     │  meta.yaml       │
-                    │  (orchestrator)   │     │  assets/content.md│
-                    └──────────────────┘     │  canonicals/     │
-                                             └──────────────────┘
-                                                      │
-                                                      ▼
-                                             ┌──────────────────┐
-                                             │  Your Obsidian   │
-                                             │  Vault / KB      │
-                                             │                  │
-                                             │  Ready for RAG,  │
-                                             │  AI agents,      │
-                                             │  Dataview        │
-                                             └──────────────────┘
-```
+<p align="center">
+  <img src="docs/architecture-diagram.svg" alt="AgentMarKB Architecture Diagram" width="800">
+</p>
 
 ## Output Format
 
