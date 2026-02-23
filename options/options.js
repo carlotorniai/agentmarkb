@@ -20,6 +20,17 @@ const elements = {
 };
 
 /**
+ * Normalize a KB path: if it doesn't end with .yaml/.yml, append /curated_sources.yaml
+ */
+function normalizePath(filePath) {
+  let p = filePath.replace(/\/+$/, ''); // strip trailing slashes
+  if (!p.endsWith('.yaml') && !p.endsWith('.yml')) {
+    p += '/curated_sources.yaml';
+  }
+  return p;
+}
+
+/**
  * Show status message
  */
 function showStatus(message, type = 'info') {
@@ -69,10 +80,8 @@ async function saveSettings() {
     return;
   }
 
-  if (!filePath.endsWith('.yaml') && !filePath.endsWith('.yml')) {
-    showStatus('File path should end with .yaml or .yml', 'error');
-    return;
-  }
+  const normalizedPath = normalizePath(filePath);
+  elements.kbFilePath.value = normalizedPath;
 
   elements.saveBtn.disabled = true;
   elements.saveBtn.textContent = 'Saving...';
@@ -80,7 +89,7 @@ async function saveSettings() {
   try {
     await chrome.runtime.sendMessage({
       action: 'saveSettings',
-      settings: { kbFilePath: filePath }
+      settings: { kbFilePath: normalizedPath }
     });
 
     showStatus('Settings saved successfully!', 'success');
@@ -103,13 +112,16 @@ async function testConnection() {
     return;
   }
 
+  const normalizedPath = normalizePath(filePath);
+  elements.kbFilePath.value = normalizedPath;
+
   elements.testBtn.disabled = true;
   elements.testBtn.textContent = 'Testing...';
 
   try {
     const response = await chrome.runtime.sendMessage({
       action: 'testConnection',
-      filePath: filePath
+      filePath: normalizedPath
     });
 
     if (response.success) {

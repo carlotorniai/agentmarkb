@@ -234,6 +234,12 @@ def handle_message(message):
     action = message.get('action')
     file_path = message.get('filePath')
 
+    # Normalize: if file_path is a directory, append curated_sources.yaml
+    if file_path:
+        p = Path(file_path).expanduser()
+        if p.is_dir():
+            file_path = str(p / 'curated_sources.yaml')
+
     if not action:
         return {'success': False, 'error': 'No action specified'}
 

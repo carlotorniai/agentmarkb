@@ -21,18 +21,18 @@
         <h2 class="section-title">Configuration</h2>
 
         <div class="form-group">
-          <label for="kbFilePath" class="label">Knowledge Base YAML File</label>
+          <label for="kbFilePath" class="label">Knowledge Base Directory</label>
           <p class="help-text">
-            Path to your curated_sources.yaml file. Bookmark folders will be
-            saved alongside it in the same directory.
-            <br>Example: /Users/username/Dropbox/AI_KB/bookmarked_content/curated_sources.yaml
+            Path to your bookmarked_content directory (or full path to curated_sources.yaml).
+            The filename will be added automatically if you enter just the directory.
+            <br>Example: /Users/username/Dropbox/AI_KB/bookmarked_content/
           </p>
           <div class="input-group">
             <input
               type="text"
               id="kbFilePath"
               class="input"
-              placeholder="/path/to/AI_KB/bookmarked_content/curated_sources.yaml"
+              placeholder="/path/to/AI_KB/bookmarked_content/"
             >
           </div>
           <p class="help-text" id="bookmarkDirHint" style="margin-top:6px; color:#059669; display:none;">
