@@ -4,3 +4,11 @@ package-lock.json
 native-host/.env/
 _articles/
 .claude/
+.DS_Store
+*.pyc
+__pycache__/
+.idea/
+.vscode/
+*.swp
+*.swo
+docs/instructions.html
