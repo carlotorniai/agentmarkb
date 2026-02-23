@@ -4,7 +4,7 @@ Migration script for existing bookmarks in curated_sources.yaml.
 
 Reads the YAML file, finds all saved articles/posts with URLs, fetches
 their content, converts to Markdown, and creates the KB document folder
-structure in 08_bookmarked_content/.
+structure in bookmarked_content/.
 
 Usage:
     python3 migrate_bookmarks.py <path_to_curated_sources.yaml> [--dry-run]
@@ -263,7 +263,7 @@ def main():
     parser = argparse.ArgumentParser(description='Migrate existing bookmarks to KB folder structure')
     parser.add_argument('yaml_path', help='Path to curated_sources.yaml')
     parser.add_argument('--dry-run', action='store_true', help='Preview changes without writing')
-    parser.add_argument('--output-dir', help='Output directory (default: sibling 08_bookmarked_content/)')
+    parser.add_argument('--output-dir', help='Output directory (default: sibling bookmarked_content/)')
     args = parser.parse_args()
 
     yaml_path = Path(args.yaml_path).expanduser()
@@ -282,7 +282,7 @@ def main():
             ai_kb_root = Path(*parts[:ai_kb_idx + 1])
         except ValueError:
             ai_kb_root = yaml_path.parent
-        base_dir = ai_kb_root / '08_bookmarked_content'
+        base_dir = ai_kb_root / 'bookmarked_content'
 
     print(f"Reading: {yaml_path}")
     print(f"Output:  {base_dir}")

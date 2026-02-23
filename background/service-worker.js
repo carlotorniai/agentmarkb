@@ -13,7 +13,7 @@
 const NATIVE_HOST_NAME = 'com.kb_manager.host';
 
 // Default bookmark output directory (relative to AI_KB root)
-const BOOKMARK_SUBDIR = '08_bookmarked_content';
+const BOOKMARK_SUBDIR = 'bookmarked_content';
 
 // Cache for KB data
 let kbCache = null;
@@ -562,7 +562,7 @@ ${tagsYaml || '  []'}
  */
 function getBookmarkBaseDir(kbFilePath) {
   // kbFilePath is something like:
-  //   /Users/.../AI_KB/08_bookmarked_content/curated_sources.yaml
+  //   /Users/.../AI_KB/bookmarked_content/curated_sources.yaml
   //   /Users/.../AI_KB/curated_sources.yaml
   // Bookmark folders are saved in the same directory as the YAML file.
   const parts = kbFilePath.split('/');
